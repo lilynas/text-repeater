@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ content.title or '分享内容' }} - 内容分享</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="view-page">
+    <div class="view-container">
+        <header class="view-header">
+            {% if content.title %}
+            <h1>{{ content.title }}</h1>
+            {% endif %}
+            <p class="view-meta">创建时间: {{ content.created_at }}</p>
+        </header>
+        
+        <main class="view-content">
+            <pre>{{ content.content }}</pre>
+        </main>
+        
+        <footer class="view-footer">
+            <p>由 <strong>内容分享</strong> 生成</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,442 @@
+/* ============================================
+   内容分享 WebUI - 样式表
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: #f5f7fa;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* ============================================
+   通用组件
+   ============================================ */
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: #4a90d9;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #3a7bc8;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.btn-small {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+.btn-copy {
+    background: #28a745;
+    color: white;
+}
+
+.btn-copy:hover {
+    background: #218838;
+}
+
+.btn-logout {
+    background: transparent;
+    color: #666;
+    border: 1px solid #ddd;
+}
+
+.btn-logout:hover {
+    background: #f0f0f0;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #555;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #4a90d9;
+}
+
+.form-group textarea {
+    min-height: 200px;
+    resize: vertical;
+    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+}
+
+.form-group .hint {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #888;
+}
+
+.message {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.message.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.message.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+
+/* ============================================
+   登录页面
+   ============================================ */
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.login-container {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.login-container h1 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.login-container .subtitle {
+    color: #888;
+    margin-bottom: 30px;
+}
+
+.login-container .btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+}
+
+/* ============================================
+   管理界面
+   ============================================ */
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.header h1 {
+    font-size: 20px;
+    color: #333;
+}
+
+.main-container {
+    display: flex;
+    min-height: calc(100vh - 60px);
+    gap: 20px;
+    padding: 20px;
+}
+
+/* 左侧面板 */
+.left-panel {
+    flex: 6;
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.left-panel h2 {
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 18px;
+}
+
+/* 右侧面板 */
+.right-panel {
+    flex: 4;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.config-section,
+.history-section {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.config-section h2,
+.history-section h2 {
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 16px;
+}
+
+/* 结果显示区 */
+.result-box {
+    margin-top: 20px;
+    padding: 20px;
+    background: #e8f5e9;
+    border-radius: 8px;
+    border: 1px solid #c8e6c9;
+}
+
+.result-box h3 {
+    margin-bottom: 15px;
+    color: #2e7d32;
+    font-size: 16px;
+}
+
+.link-container {
+    display: flex;
+    gap: 10px;
+}
+
+.link-container input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+}
+
+.copy-hint {
+    margin-top: 10px;
+    color: #2e7d32;
+    font-size: 14px;
+}
+
+/* 历史记录 */
+.history-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    gap: 10px;
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.history-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.history-title {
+    display: block;
+    font-weight: 500;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-date {
+    display: block;
+    font-size: 12px;
+    color: #888;
+}
+
+.history-actions {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.no-history {
+    color: #888;
+    text-align: center;
+    padding: 20px;
+}
+
+/* ============================================
+   查看页面
+   ============================================ */
+
+.view-page {
+    min-height: 100vh;
+    background: #f5f7fa;
+    padding: 40px 20px;
+}
+
+.view-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.view-header {
+    padding: 25px 30px;
+    border-bottom: 1px solid #eee;
+}
+
+.view-header h1 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.view-meta {
+    color: #888;
+    font-size: 14px;
+}
+
+.view-content {
+    padding: 30px;
+}
+
+.view-content pre {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+}
+
+.view-footer {
+    padding: 15px 30px;
+    background: #f8f9fa;
+    text-align: center;
+    font-size: 13px;
+    color: #888;
+}
+
+/* ============================================
+   响应式布局
+   ============================================ */
+
+@media (max-width: 900px) {
+    .main-container {
+        flex-direction: column;
+    }
+    
+    .left-panel,
+    .right-panel {
+        flex: none;
+        width: 100%;
+    }
+    
+    .history-actions {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 500px) {
+    .header {
+        padding: 12px 15px;
+    }
+    
+    .header h1 {
+        font-size: 16px;
+    }
+    
+    .main-container {
+        padding: 10px;
+    }
+    
+    .left-panel,
+    .config-section,
+    .history-section {
+        padding: 15px;
+    }
+    
+    .login-container {
+        padding: 30px 20px;
+        margin: 15px;
+    }
+}

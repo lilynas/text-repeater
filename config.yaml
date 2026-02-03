@@ -1,0 +1,12 @@
+auth:
+  password: newpassword123
+content:
+  default_expire_hours: 24
+  max_content_size: 1048576
+database:
+  path: C:\Users\caramel\AppData\Local\Temp\tmp2sczrujk.db
+server:
+  debug: false
+  host: 0.0.0.0
+  port: 8080
+  secret_key: change-this-in-production

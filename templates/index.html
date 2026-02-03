@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理界面 - 内容分享</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <h1>内容分享</h1>
+        <a href="{{ url_for('logout') }}" class="btn btn-logout">退出登录</a>
+    </header>
+    
+    <main class="main-container">
+        <!-- 左侧：内容创建区 -->
+        <section class="left-panel">
+            <h2>创建新内容</h2>
+            
+            <form id="create-form">
+                <div class="form-group">
+                    <label for="title">标题（可选）</label>
+                    <input type="text" id="title" name="title" placeholder="输入标题...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="content">内容</label>
+                    <textarea id="content" name="content" placeholder="输入要分享的内容..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="expire_hours">过期时间</label>
+                    <select id="expire_hours" name="expire_hours">
+                        <option value="1">1 小时</option>
+                        <option value="6">6 小时</option>
+                        <option value="12">12 小时</option>
+                        <option value="24" selected>24 小时</option>
+                        <option value="48">48 小时</option>
+                        <option value="168">7 天</option>
+                        <option value="720">30 天</option>
+                        <option value="0">永不过期</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">创建分享链接</button>
+            </form>
+            
+            <!-- 生成的链接显示区 -->
+            <div id="result" class="result-box" style="display: none;">
+                <h3>分享链接已生成</h3>
+                <div class="link-container">
+                    <input type="text" id="share-link" readonly>
+                    <button type="button" class="btn btn-copy" onclick="copyLink()">复制</button>
+                </div>
+                <p class="copy-hint" id="copy-hint"></p>
+            </div>
+        </section>
+        
+        <!-- 右侧：配置和历史 -->
+        <aside class="right-panel">
+            <!-- 配置区域 -->
+            <div class="config-section">
+                <h2>配置管理</h2>
+                <form id="config-form">
+                    <div class="form-group">
+                        <label for="config-password">管理密码</label>
+                        <input type="password" id="config-password" name="password" value="{{ config.auth.password }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="config-expire">默认过期时间（小时）</label>
+                        <input type="number" id="config-expire" name="default_expire_hours" value="{{ config.content.default_expire_hours }}" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="config-port">端口</label>
+                        <input type="number" id="config-port" name="port" value="{{ config.server.port }}" min="1" max="65535">
+                        <small class="hint">更改端口需要重启服务</small>
+                    </div>
+                    <button type="submit" class="btn btn-secondary">保存配置</button>
+                </form>
+                <p id="config-message" class="message"></p>
+            </div>
+            
+            <!-- 历史记录 -->
+            <div class="history-section">
+                <h2>历史记录</h2>
+                <div class="history-list" id="history-list">
+                    {% if contents %}
+                        {% for item in contents %}
+                        <div class="history-item" data-id="{{ item.id }}">
+                            <div class="history-info">
+                                <span class="history-title">{{ item.title or '无标题' }}</span>
+                                <span class="history-date">{{ item.created_at }}</span>
+                            </div>
+                            <div class="history-actions">
+                                <a href="{{ url_for('view', short_id=item.id) }}" target="_blank" class="btn btn-small">查看</a>
+                                <button type="button" class="btn btn-small btn-copy-link" onclick="copyHistoryLink('{{ url_for('view', short_id=item.id, _external=True) }}')">复制</button>
+                                <button type="button" class="btn btn-small btn-danger" onclick="deleteContent('{{ item.id }}')">删除</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="no-history">暂无历史记录</p>
+                    {% endif %}
+                </div>
+            </div>
+        </aside>
+    </main>
+    
+    <script>
+        // 创建内容
+        document.getElementById('create-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('{{ url_for("create") }}', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('share-link').value = data.share_url;
+                    document.getElementById('result').style.display = 'block';
+                    document.getElementById('copy-hint').textContent = '';
+                } else {
+                    alert(data.error || '创建失败');
+                }
+            } catch (error) {
+                alert('请求失败: ' + error.message);
+            }
+        });
+        
+        // 复制链接
+        function copyLink() {
+            const linkInput = document.getElementById('share-link');
+            linkInput.select();
+            document.execCommand('copy');
+            document.getElementById('copy-hint').textContent = '已复制到剪贴板!';
+        }
+        
+        // 复制历史链接
+        function copyHistoryLink(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('链接已复制!');
+            }).catch(() => {
+                prompt('请手动复制:', url);
+            });
+        }
+        
+        // 删除内容
+        async function deleteContent(id) {
+            if (!confirm('确定要删除这条内容吗?')) return;
+            
+            try {
+                const response = await fetch('/delete/' + id, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.querySelector(`.history-item[data-id="${id}"]`).remove();
+                } else {
+                    alert('删除失败');
+                }
+            } catch (error) {
+                alert('请求失败: ' + error.message);
+            }
+        }
+        
+        // 保存配置
+        document.getElementById('config-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const configData = {
+                auth: {
+                    password: document.getElementById('config-password').value
+                },
+                content: {
+                    default_expire_hours: parseInt(document.getElementById('config-expire').value)
+                },
+                server: {
+                    port: parseInt(document.getElementById('config-port').value)
+                }
+            };
+            
+            try {
+                const response = await fetch('{{ url_for("config_page") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(configData)
+                });
+                
+                const data = await response.json();
+                const msgEl = document.getElementById('config-message');
+                
+                if (data.success) {
+                    msgEl.textContent = data.message;
+                    msgEl.className = 'message success';
+                } else {
+                    msgEl.textContent = data.error || '保存失败';
+                    msgEl.className = 'message error';
+                }
+            } catch (error) {
+                document.getElementById('config-message').textContent = '请求失败: ' + error.message;
+                document.getElementById('config-message').className = 'message error';
+            }
+        });
+    </script>
+</body>
+</html>
