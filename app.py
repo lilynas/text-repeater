@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 
 import yaml
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, abort
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, abort, Response
 
 # =============================================================================
 # 配置加载
@@ -228,11 +228,11 @@ def create():
 
 @app.route('/s/<short_id>')
 def view(short_id):
-    """公开访问内容"""
+    """公开访问内容 - 返回纯文本"""
     content = get_content(short_id)
     if content is None:
         abort(404)
-    return render_template('view.html', content=content)
+    return Response(content['content'], mimetype='text/plain; charset=utf-8')
 
 @app.route('/delete/<short_id>', methods=['POST'])
 @login_required
