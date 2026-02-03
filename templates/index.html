@@ -42,6 +42,24 @@
                     </select>
                 </div>
                 
+                <div class="form-group">
+                    <label for="custom_id">自定义链接（可选）</label>
+                    <div class="custom-link-input">
+                        <span class="prefix">/s/</span>
+                        <input type="text" id="custom_id" name="custom_id" placeholder="my-custom-link">
+                    </div>
+                    <small class="hint">留空则自动生成，只能包含字母、数字、下划线和连字符</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="render_mode">显示格式</label>
+                    <select id="render_mode" name="render_mode">
+                        <option value="raw" selected>纯文本 (Raw)</option>
+                        <option value="html">HTML 页面</option>
+                    </select>
+                    <small class="hint">纯文本类似 raw.githubusercontent.com，HTML 页面带样式</small>
+                </div>
+                
                 <button type="submit" class="btn btn-primary">创建分享链接</button>
             </form>
             

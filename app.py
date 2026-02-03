@@ -73,9 +73,15 @@ def init_db():
             content TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             expires_at TIMESTAMP,
-            title TEXT
+            title TEXT,
+            render_mode TEXT DEFAULT 'raw'
         )
     ''')
+    # 迁移：添加 render_mode 列（如果不存在）
+    try:
+        c.execute('ALTER TABLE contents ADD COLUMN render_mode TEXT DEFAULT "raw"')
+    except sqlite3.OperationalError:
+        pass  # 列已存在
     conn.commit()
     conn.close()
 
@@ -91,18 +97,26 @@ def is_expired(expires_at):
         expires_at = datetime.fromisoformat(expires_at)
     return datetime.now() > expires_at
 
-def save_content(content, title, expire_hours):
+def save_content(content, title, expire_hours, custom_id=None, render_mode='raw'):
     """保存内容到数据库"""
-    short_id = generate_short_id()
+    short_id = custom_id if custom_id else generate_short_id()
     expires_at = None
     if expire_hours and expire_hours > 0:
         expires_at = datetime.now() + timedelta(hours=expire_hours)
     
     conn = get_db_connection()
     c = conn.cursor()
+    
+    # 检查自定义 ID 是否已存在
+    if custom_id:
+        c.execute('SELECT id FROM contents WHERE id = ?', (custom_id,))
+        if c.fetchone():
+            conn.close()
+            return None  # ID 已存在
+    
     c.execute(
-        'INSERT INTO contents (id, content, title, expires_at) VALUES (?, ?, ?, ?)',
-        (short_id, content, title, expires_at)
+        'INSERT INTO contents (id, content, title, expires_at, render_mode) VALUES (?, ?, ?, ?, ?)',
+        (short_id, content, title, expires_at, render_mode)
     )
     conn.commit()
     conn.close()
@@ -202,6 +216,8 @@ def create():
     """创建内容"""
     content = request.form.get('content', '')
     title = request.form.get('title', '')
+    custom_id = request.form.get('custom_id', '').strip()
+    render_mode = request.form.get('render_mode', 'raw')
     expire_hours = request.form.get('expire_hours', config['content']['default_expire_hours'])
     
     try:
@@ -217,7 +233,23 @@ def create():
     if not content:
         return jsonify({'error': '内容不能为空'}), 400
     
-    short_id = save_content(content, title, expire_hours)
+    # 验证自定义 ID
+    if custom_id:
+        import re
+        if not re.match(r'^[a-zA-Z0-9_-]+$', custom_id):
+            return jsonify({'error': '自定义链接只能包含字母、数字、下划线和连字符'}), 400
+        if len(custom_id) < 2 or len(custom_id) > 50:
+            return jsonify({'error': '自定义链接长度需要在 2-50 个字符之间'}), 400
+    
+    # 验证 render_mode
+    if render_mode not in ('raw', 'html'):
+        render_mode = 'raw'
+    
+    short_id = save_content(content, title, expire_hours, custom_id or None, render_mode)
+    
+    if short_id is None:
+        return jsonify({'error': f'自定义链接 "{custom_id}" 已被使用'}), 400
+    
     share_url = url_for('view', short_id=short_id, _external=True)
     
     return jsonify({
@@ -228,11 +260,16 @@ def create():
 
 @app.route('/s/<short_id>')
 def view(short_id):
-    """公开访问内容 - 返回纯文本"""
+    """公开访问内容"""
     content = get_content(short_id)
     if content is None:
         abort(404)
-    return Response(content['content'], mimetype='text/plain; charset=utf-8')
+    
+    render_mode = content.get('render_mode', 'raw')
+    if render_mode == 'html':
+        return render_template('view.html', content=content)
+    else:
+        return Response(content['content'], mimetype='text/plain; charset=utf-8')
 
 @app.route('/delete/<short_id>', methods=['POST'])
 @login_required
