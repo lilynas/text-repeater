@@ -14,15 +14,52 @@
 
 ## 快速开始
 
-### 安装依赖
+### 方式一：Docker 运行（推荐）
 
 ```bash
-pip install -r requirements.txt
+# 拉取镜像
+docker pull ghcr.io/lilynas/text-repeater:latest
+
+# 运行容器
+docker run -d \
+  --name text-repeater \
+  -p 8080:8080 \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/config.yaml:/app/config.yaml \
+  ghcr.io/lilynas/text-repeater:latest
 ```
 
-### 启动服务
+### 方式二：Docker Compose
+
+创建 `docker-compose.yml`:
+
+```yaml
+version: '3.8'
+services:
+  text-repeater:
+    image: ghcr.io/lilynas/text-repeater:latest
+    container_name: text-repeater
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - ./config.yaml:/app/config.yaml
+    restart: unless-stopped
+```
+
+运行：
 
 ```bash
+docker-compose up -d
+```
+
+### 方式三：手动安装
+
+```bash
+# 安装依赖
+pip install -r requirements.txt
+
+# 启动服务
 python app.py
 ```
 
@@ -68,10 +105,11 @@ database:
 ## 项目结构
 
 ```
-repeater/
+text-repeater/
 ├── app.py              # Flask 主应用
 ├── config.yaml         # 配置文件
 ├── requirements.txt    # Python 依赖
+├── Dockerfile          # Docker 构建文件
 ├── data/
 │   └── content.db      # SQLite 数据库
 ├── templates/
@@ -108,7 +146,7 @@ python -m pytest -v
 1. 修改 `config.yaml` 中的 `secret_key` 为随机字符串
 2. 修改默认密码
 3. 使用 Nginx 反向代理并配置 HTTPS
-4. 使用 gunicorn 或 uWSGI 运行
+4. 使用 Docker 或 gunicorn 运行
 
 ```bash
 # 使用 gunicorn 运行
@@ -140,6 +178,7 @@ server {
 - **数据库**: SQLite
 - **配置**: YAML
 - **前端**: 原生 HTML/CSS/JavaScript
+- **容器**: Docker + GitHub Actions 自动构建
 
 ## License
 
