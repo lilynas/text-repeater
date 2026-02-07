@@ -156,15 +156,33 @@ def list_contents():
     c.execute('SELECT * FROM contents ORDER BY created_at DESC')
     rows = c.fetchall()
     conn.close()
-    
+
     # 过滤掉过期内容
     result = []
     for row in rows:
         content_dict = dict(row)
         if not is_expired(content_dict.get('expires_at')):
             result.append(content_dict)
-    
+
     return result
+
+def update_content(short_id, content, title, expire_hours, render_mode='raw'):
+    """更新现有内容"""
+    expires_at = None
+    if expire_hours and expire_hours > 0:
+        expires_at = datetime.now() + timedelta(hours=expire_hours)
+
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute('''
+        UPDATE contents
+        SET content = ?, title = ?, expires_at = ?, render_mode = ?
+        WHERE id = ?
+    ''', (content, title, expires_at, render_mode, short_id))
+    updated = c.rowcount > 0
+    conn.commit()
+    conn.close()
+    return updated
 
 # =============================================================================
 # 认证装饰器
@@ -276,6 +294,53 @@ def view(short_id):
 def delete(short_id):
     """删除内容"""
     delete_content(short_id)
+    return jsonify({'success': True})
+
+@app.route('/get/<short_id>')
+@login_required
+def get_content_api(short_id):
+    """获取内容数据（用于编辑）"""
+    content = get_content(short_id)
+    if content is None:
+        return jsonify({'error': '内容不存在或已过期'}), 404
+    return jsonify({
+        'id': content['id'],
+        'title': content['title'] or '',
+        'content': content['content'],
+        'render_mode': content.get('render_mode', 'raw'),
+        'expires_at': content['expires_at']
+    })
+
+@app.route('/update/<short_id>', methods=['POST'])
+@login_required
+def update(short_id):
+    """更新现有内容"""
+    content = request.form.get('content', '')
+    title = request.form.get('title', '')
+    render_mode = request.form.get('render_mode', 'raw')
+    expire_hours = request.form.get('expire_hours', 0)
+
+    try:
+        expire_hours = int(expire_hours)
+    except (ValueError, TypeError):
+        expire_hours = 0
+
+    # 验证内容大小
+    max_size = config['content']['max_content_size']
+    if len(content.encode('utf-8')) > max_size:
+        return jsonify({'error': f'内容超过最大限制 ({max_size} bytes)'}), 400
+
+    if not content:
+        return jsonify({'error': '内容不能为空'}), 400
+
+    if render_mode not in ('raw', 'html'):
+        render_mode = 'raw'
+
+    success = update_content(short_id, content, title, expire_hours, render_mode)
+
+    if not success:
+        return jsonify({'error': '内容不存在'}), 404
+
     return jsonify({'success': True})
 
 @app.route('/config', methods=['GET', 'POST'])

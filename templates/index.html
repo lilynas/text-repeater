@@ -111,6 +111,7 @@
                             </div>
                             <div class="history-actions">
                                 <a href="{{ url_for('view', short_id=item.id) }}" target="_blank" class="btn btn-small">查看</a>
+                                <button type="button" class="btn btn-small btn-edit" onclick="openEditModal('{{ item.id }}')">编辑</button>
                                 <button type="button" class="btn btn-small btn-copy-link" onclick="copyHistoryLink('{{ url_for('view', short_id=item.id, _external=True) }}')">复制</button>
                                 <button type="button" class="btn btn-small btn-danger" onclick="deleteContent('{{ item.id }}')">删除</button>
                             </div>
@@ -123,7 +124,54 @@
             </div>
         </aside>
     </main>
-    
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal" style="display: none;">
+        <div class="modal-overlay" onclick="closeEditModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑内容</h3>
+                <button type="button" class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form id="edit-form" enctype="multipart/form-data">
+                <input type="hidden" id="edit-id" name="id">
+                <div class="form-group">
+                    <label for="edit-title">标题（可选）</label>
+                    <input type="text" id="edit-title" name="title" placeholder="输入标题...">
+                </div>
+                <div class="form-group">
+                    <label for="edit-content">内容</label>
+                    <textarea id="edit-content" name="content" placeholder="输入要分享的内容..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit-expire">过期时间</label>
+                    <select id="edit-expire" name="expire_hours">
+                        <option value="1">1 小时</option>
+                        <option value="6">6 小时</option>
+                        <option value="12">12 小时</option>
+                        <option value="24">24 小时</option>
+                        <option value="48">48 小时</option>
+                        <option value="168">7 天</option>
+                        <option value="720">30 天</option>
+                        <option value="0">永不过期</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-render-mode">显示格式</label>
+                    <select id="edit-render-mode" name="render_mode">
+                        <option value="raw">纯文本 (Raw)</option>
+                        <option value="html">HTML 页面</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+            <p id="edit-message" class="message"></p>
+        </div>
+    </div>
+
     <script>
         // 创建内容
         document.getElementById('create-form').addEventListener('submit', async function(e) {
@@ -189,6 +237,86 @@
             }
         }
         
+        // 打开编辑模态框
+        async function openEditModal(id) {
+            try {
+                const response = await fetch('/get/' + id);
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                // 填充表单
+                document.getElementById('edit-id').value = data.id;
+                document.getElementById('edit-title').value = data.title || '';
+                document.getElementById('edit-content').value = data.content;
+                document.getElementById('edit-render-mode').value = data.render_mode || 'raw';
+                document.getElementById('edit-expire').value = '0'; // 默认为"永不过期"
+                document.getElementById('edit-message').textContent = '';
+                document.getElementById('edit-message').className = 'message';
+
+                // 显示模态框
+                document.getElementById('edit-modal').style.display = 'flex';
+            } catch (error) {
+                alert('加载失败: ' + error.message);
+            }
+        }
+
+        // 关闭编辑模态框
+        function closeEditModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+        }
+
+        // 处理编辑表单提交
+        document.getElementById('edit-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('edit-id').value;
+            const formData = new FormData(this);
+
+            try {
+                const response = await fetch('/update/' + id, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                const msgEl = document.getElementById('edit-message');
+
+                if (data.success) {
+                    // 更新历史列表中的标题
+                    const historyItem = document.querySelector(`.history-item[data-id="${id}"]`);
+                    if (historyItem) {
+                        const titleEl = historyItem.querySelector('.history-title');
+                        titleEl.textContent = document.getElementById('edit-title').value || '无标题';
+                    }
+
+                    msgEl.textContent = '保存成功!';
+                    msgEl.className = 'message success';
+
+                    // 短暂延迟后关闭模态框
+                    setTimeout(() => {
+                        closeEditModal();
+                    }, 1000);
+                } else {
+                    msgEl.textContent = data.error || '保存失败';
+                    msgEl.className = 'message error';
+                }
+            } catch (error) {
+                document.getElementById('edit-message').textContent = '请求失败: ' + error.message;
+                document.getElementById('edit-message').className = 'message error';
+            }
+        });
+
+        // ESC键关闭模态框
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeEditModal();
+            }
+        });
+
         // 保存配置
         document.getElementById('config-form').addEventListener('submit', async function(e) {
             e.preventDefault();
